@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import confetti from 'canvas-confetti'
 import { Language, VocabItem } from '@/types'
 import { useSpeech } from '@/hooks/useSpeech'
@@ -56,15 +56,7 @@ export default function FlashCardGame({ language, onBack }: Props) {
     speak(currentRound.target.word, currentRound.target.audioLang || 'en-US')
   }, [currentRound, speak])
 
-  useEffect(() => {
-    if (currentRound && !audioPlayed.current && !showResult && !gameOver) {
-      audioPlayed.current = true
-      const timer = setTimeout(() => {
-        playTargetWord()
-      }, 500)
-      return () => clearTimeout(timer)
-    }
-  }, [currentRound, playTargetWord, showResult, gameOver])
+  // Auto-play removed: user clicks "Listen!" when ready.
 
   const handleCardClick = useCallback(
     (item: VocabItem) => {

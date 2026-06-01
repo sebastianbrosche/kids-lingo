@@ -4,9 +4,12 @@
 
 @layer base {
   html, body, #root {
-    @apply h-full w-full overflow-hidden;
+    @apply h-full w-full;
     font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+  }
+  #root {
+    @apply overflow-y-auto;
   }
 }

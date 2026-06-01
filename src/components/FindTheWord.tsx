@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import confetti from 'canvas-confetti'
 import { Language, VocabItem } from '@/types'
 import { useSpeech } from '@/hooks/useSpeech'
@@ -95,14 +95,7 @@ export default function FindTheWord({ language, onBack }: Props) {
     speak(currentRound.target.word, currentRound.target.audioLang || 'en-US')
   }, [currentRound, speak])
 
-  // Auto-play the word a beat after the scene appears.
-  useEffect(() => {
-    if (currentRound && !audioPlayed.current && !locked && !gameOver) {
-      audioPlayed.current = true
-      const timer = setTimeout(playTargetWord, 500)
-      return () => clearTimeout(timer)
-    }
-  }, [currentRound, playTargetWord, locked, gameOver])
+  // Auto-play removed: user clicks "Listen!" when ready.
 
   const advance = useCallback(() => {
     if (currentIndex + 1 >= rounds.length) {
