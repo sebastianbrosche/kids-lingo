@@ -1,32 +1,55 @@
 import { useState, useCallback } from 'react'
-import { GameScreen, Language } from '@/types'
+import { GameScreen, Language, PlayerStats, DungeonLevel } from '@/types'
 import { languages } from '@/data/vocabulary'
 import LanguageSelector from '@/components/LanguageSelector'
-import HomeScreen from '@/components/HomeScreen'
-import FlashCardGame from '@/components/FlashCardGame'
-import FindTheWord from '@/components/FindTheWord'
-import FindDifferences from '@/components/FindDifferences'
+import JourneyMap from '@/components/JourneyMap'
+import GameScreenComp from '@/components/GameScreen'
 import VersionFooter from '@/components/VersionFooter'
+
+const initialStats: PlayerStats = {
+  exp: 0,
+  level: 1,
+  totalExp: 0,
+  completedLevels: [],
+  loot: [],
+  streak: 0,
+  bestStreak: 0,
+}
 
 export default function App() {
   const [screen, setScreen] = useState<GameScreen>('language')
   const [selectedLang, setSelectedLang] = useState<Language | null>(null)
+  const [selectedLevel, setSelectedLevel] = useState<DungeonLevel | null>(null)
+  const [stats, setStats] = useState<PlayerStats>(initialStats)
 
   const handleSelectLanguage = useCallback((lang: Language) => {
     setSelectedLang(lang)
-    setScreen('home')
+    setScreen('journey')
   }, [])
 
-  const handleSelectGame = useCallback((game: GameScreen) => {
-    setScreen(game)
+  const handleSelectLevel = useCallback((level: DungeonLevel) => {
+    setSelectedLevel(level)
+    setScreen('level')
+  }, [])
+
+  const handleUpdateStats = useCallback((newStats: PlayerStats) => {
+    setStats(newStats)
+  }, [])
+
+  const handleLevelComplete = useCallback(() => {
+    setSelectedLevel(null)
+    setScreen('journey')
   }, [])
 
   const handleBack = useCallback(() => {
-    if (screen === 'home') {
+    if (screen === 'level') {
+      setSelectedLevel(null)
+      setScreen('journey')
+    } else if (screen === 'journey') {
       setSelectedLang(null)
       setScreen('language')
     } else {
-      setScreen('home')
+      setScreen('language')
     }
   }, [screen])
 
@@ -35,17 +58,23 @@ export default function App() {
       {screen === 'language' && (
         <LanguageSelector languages={languages} onSelect={handleSelectLanguage} />
       )}
-      {screen === 'home' && selectedLang && (
-        <HomeScreen language={selectedLang} onSelectGame={handleSelectGame} onBack={handleBack} />
+      {screen === 'journey' && selectedLang && (
+        <JourneyMap
+          language={selectedLang}
+          stats={stats}
+          onSelectLevel={handleSelectLevel}
+          onBack={handleBack}
+        />
       )}
-      {screen === 'flashcards' && selectedLang && (
-        <FlashCardGame language={selectedLang} onBack={handleBack} />
-      )}
-      {screen === 'findword' && selectedLang && (
-        <FindTheWord language={selectedLang} onBack={handleBack} />
-      )}
-      {screen === 'differences' && (
-        <FindDifferences onBack={handleBack} />
+      {screen === 'level' && selectedLang && selectedLevel && (
+        <GameScreenComp
+          language={selectedLang}
+          level={selectedLevel}
+          stats={stats}
+          onUpdateStats={handleUpdateStats}
+          onComplete={handleLevelComplete}
+          onBack={handleBack}
+        />
       )}
       <VersionFooter />
     </div>

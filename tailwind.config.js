@@ -24,6 +24,14 @@ export default {
         'wiggle': 'wiggle 0.5s ease-in-out infinite',
         'pop': 'pop 0.3s ease-out',
         'shake': 'shake 0.4s ease-in-out',
+        'puddle-jump': 'puddle-jump 0.6s ease-in-out',
+        'laser-left': 'laser-left 0.3s ease-in-out infinite',
+        'laser-right': 'laser-right 0.3s ease-in-out infinite',
+        'bounce-in': 'bounce-in 0.4s ease-out forwards',
+        'monster-fade': 'monster-fade 1.5s ease-out forwards',
+        'magic-missile': 'magic-missile 0.8s ease-out forwards',
+        'missile-trail': 'missile-trail 0.6s ease-out forwards',
+        'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
       },
       keyframes: {
         wiggle: {

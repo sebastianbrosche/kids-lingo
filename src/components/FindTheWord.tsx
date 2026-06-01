@@ -6,6 +6,12 @@ import { useSpeech } from '@/hooks/useSpeech'
 interface Props {
   language: Language
   onBack: () => void
+  onCorrect?: () => void
+  onWrong?: () => void
+  onComplete?: (score: number, total: number) => void
+  continuous?: boolean
+  correctCount?: number
+  targetCount?: number
 }
 
 interface Round {
@@ -74,7 +80,7 @@ function generateRounds(vocab: VocabItem[]): Round[] {
   })
 }
 
-export default function FindTheWord({ language, onBack }: Props) {
+export default function FindTheWord({ language, onBack, onCorrect, onWrong, continuous, correctCount: externalCorrect, targetCount }: Props) {
   const { speak } = useSpeech()
   const [rounds, setRounds] = useState<Round[]>(() => generateRounds(language.vocab))
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -84,30 +90,29 @@ export default function FindTheWord({ language, onBack }: Props) {
   const [wrongId, setWrongId] = useState<string | null>(null)
   const [foundId, setFoundId] = useState<string | null>(null)
   const [locked, setLocked] = useState(false)
-  const [gameOver, setGameOver] = useState(false)
   const audioPlayed = useRef(false)
 
   const currentRound = rounds[currentIndex]
-  const progress = (currentIndex / rounds.length) * 100
+  const progress = continuous && targetCount ? ((externalCorrect || 0) / targetCount) * 100 : (currentIndex / rounds.length) * 100
 
   const playTargetWord = useCallback(() => {
     if (!currentRound) return
     speak(currentRound.target.word, currentRound.target.audioLang || 'en-US')
   }, [currentRound, speak])
 
-  // Auto-play removed: user clicks "Listen!" when ready.
-
   const advance = useCallback(() => {
     if (currentIndex + 1 >= rounds.length) {
-      setGameOver(true)
+      // In continuous mode, regenerate
+      setRounds(generateRounds(language.vocab))
+      setCurrentIndex(0)
     } else {
       setCurrentIndex((i) => i + 1)
-      setFoundId(null)
-      setWrongId(null)
-      setLocked(false)
-      audioPlayed.current = false
     }
-  }, [currentIndex, rounds.length])
+    setFoundId(null)
+    setWrongId(null)
+    setLocked(false)
+    audioPlayed.current = false
+  }, [currentIndex, rounds.length, language.vocab])
 
   const handlePick = useCallback(
     (item: PlacedItem) => {
@@ -128,84 +133,19 @@ export default function FindTheWord({ language, onBack }: Props) {
           origin: { y: 0.5 },
           colors: ['#FFD93D', '#FF8C42', '#69F0AE', '#4FC3F7', '#FF6B9D'],
         })
-        // Repeat the word they just found, in the target language, to reinforce it.
         speak(item.word, item.audioLang || 'en-US')
+        onCorrect?.()
         setTimeout(advance, 1400)
       } else {
-        // Wrong tap is a gentle nudge, never a penalty: wiggle it, replay the word.
         setWrongId(item.id)
         setStreak(0)
         speak(currentRound.target.word, currentRound.target.audioLang || 'en-US')
+        onWrong?.()
         setTimeout(() => setWrongId(null), 500)
       }
     },
-    [currentRound, locked, bestStreak, advance, speak]
+    [currentRound, locked, bestStreak, advance, speak, onCorrect, onWrong]
   )
-
-  const handleReplay = useCallback(() => {
-    setRounds(generateRounds(language.vocab))
-    setCurrentIndex(0)
-    setScore(0)
-    setStreak(0)
-    setBestStreak(0)
-    setFoundId(null)
-    setWrongId(null)
-    setLocked(false)
-    setGameOver(false)
-    audioPlayed.current = false
-  }, [language.vocab])
-
-  if (gameOver) {
-    const percentage = Math.round((score / rounds.length) * 100)
-    const stars = percentage >= 80 ? 3 : percentage >= 50 ? 2 : 1
-
-    return (
-      <div className="flex h-full flex-col items-center justify-center p-6">
-        <h2 className="mb-4 text-4xl font-bold text-kids-brown md:text-6xl">
-          You did it!
-        </h2>
-        <div className="mb-6 flex gap-2">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <span
-              key={i}
-              className={`text-5xl md:text-6xl transition-all ${
-                i < stars ? 'animate-pop' : 'opacity-30 grayscale'
-              }`}
-              style={{ animationDelay: `${i * 200}ms` }}
-            >
-              ⭐
-            </span>
-          ))}
-        </div>
-        <div className="mb-8 grid w-full max-w-xs grid-cols-2 gap-4 text-center">
-          <div className="rounded-2xl bg-white p-4 shadow-md">
-            <div className="text-3xl font-bold text-kids-brown">
-              {score}/{rounds.length}
-            </div>
-            <div className="text-sm text-kids-brown/60">Found</div>
-          </div>
-          <div className="rounded-2xl bg-white p-4 shadow-md">
-            <div className="text-3xl font-bold text-kids-brown">{bestStreak}</div>
-            <div className="text-sm text-kids-brown/60">Best Streak</div>
-          </div>
-        </div>
-        <div className="flex gap-4">
-          <button
-            onClick={handleReplay}
-            className="rounded-full bg-kids-purple px-8 py-4 text-xl font-bold text-kids-brown shadow-lg transition-all hover:scale-105 active:scale-95"
-          >
-            🔄 Play Again
-          </button>
-          <button
-            onClick={onBack}
-            className="rounded-full bg-white px-8 py-4 text-xl font-bold text-kids-brown shadow-lg transition-all hover:scale-105 active:scale-95"
-          >
-            🏠 Home
-          </button>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="flex h-full flex-col p-4 md:p-6">
@@ -223,7 +163,7 @@ export default function FindTheWord({ language, onBack }: Props) {
             <span className="text-xl font-bold text-kids-brown">{streak}</span>
           </div>
           <div className="rounded-full bg-white px-4 py-2 font-bold text-kids-brown shadow-md">
-            {score}/{rounds.length}
+            {score}
           </div>
         </div>
       </div>
@@ -263,9 +203,7 @@ export default function FindTheWord({ language, onBack }: Props) {
               style={{
                 left: `${item.left}%`,
                 top: `${item.top}%`,
-                transform: `translate(-50%, -50%) rotate(${item.rotate}deg) scale(${
-                  isFound ? 1.4 : item.scale
-                })`,
+                transform: `translate(-50%, -50%) rotate(${item.rotate}deg) scale(${isFound ? 1.4 : item.scale})`,
               }}
               aria-label={item.word}
             >
