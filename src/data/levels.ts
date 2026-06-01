@@ -147,7 +147,7 @@ export const dungeonLevels: DungeonLevel[] = [
     name: 'The Scrapyard',
     theme: 'Piles of twisted metal where goblins build their war machines',
     boss: dccMonsters[1],
-    monsters: ['🚜', '🔪', '⛑️', '⚙️', '🔧'],
+    monsters: ['🚜', '🔪', '⛑️', '⚙️', '🔧', '🐛'],
     vocabIndices: [0, 1, 2, 3, 4],
     gameType: 'flashcards',
     color: '#8B4513',
