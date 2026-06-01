@@ -6,6 +6,7 @@ import HomeScreen from '@/components/HomeScreen'
 import FlashCardGame from '@/components/FlashCardGame'
 import FindTheWord from '@/components/FindTheWord'
 import FindDifferences from '@/components/FindDifferences'
+import VersionFooter from '@/components/VersionFooter'
 
 export default function App() {
   const [screen, setScreen] = useState<GameScreen>('language')
@@ -46,6 +47,7 @@ export default function App() {
       {screen === 'differences' && (
         <FindDifferences onBack={handleBack} />
       )}
+      <VersionFooter />
     </div>
   )
 }
